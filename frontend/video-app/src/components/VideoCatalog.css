@@ -1,0 +1,24 @@
+.video-catalog-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.video-item {
+  background: #f9f9f9;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.video-item h3 {
+  font-size: 18px;
+  color: #007bff;
+}
+
+.video-item p {
+  font-size: 14px;
+  color: #555;
+}
