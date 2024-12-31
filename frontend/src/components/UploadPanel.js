@@ -1,90 +1,84 @@
-import axios from 'axios';
 import React, { useState } from 'react';
-import './UploadPanel.css';
+import axios from 'axios';
 
-const UploadPanel = () => {
-  const [vidTitle, setVidTitle] = useState('');
-  const [vidDesc, setVidDesc] = useState('');
-  const [vidTags, setVidTags] = useState('');
-  const [vidFile, setVidFile] = useState(null);
-  const [uploadError, setUploadError] = useState(null);
-  const [uploadSuccess, setUploadSuccess] = useState(null);
+function UploadPanel() {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState('');
+  const [file, setFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null); // For video preview
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setVideoPreview(URL.createObjectURL(selectedFile)); // Generate a URL for the preview
+    }
+  };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-
-    if (!vidFile) {
-      setUploadError('Please select a video file to upload.');
-      return;
-    }
-
-    const formPayload = new FormData();
-    formPayload.append('title', vidTitle);
-    formPayload.append('description', vidDesc);
-    formPayload.append('tags', vidTags);
-    formPayload.append('video', vidFile);
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('tags', tags);
+    formData.append('video', file);
 
     try {
-      const authToken = localStorage.getItem('userToken');
-      const response = await axios.post(
-        'https://video-app-backend-2tsp.onrender.com/upload',
-        formPayload,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      console.log('Upload Success:', response.data);
-      setUploadSuccess('Video uploaded successfully!');
-      setVidTitle('');
-      setVidDesc('');
-      setVidTags('');
-      setVidFile(null);
+      const token = localStorage.getItem('token'); // Assumes a stored JWT token
+      await axios.post('http://localhost:5000/upload', formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Video uploaded successfully!');
+      setTitle('');
+      setDescription('');
+      setTags('');
+      setFile(null);
+      setVideoPreview(null); // Clear preview after upload
     } catch (err) {
-      console.error('Upload Failed:', err.response || err.message);
-      setUploadError('Failed to upload the video. Please try again.');
+      console.error(err);
+      alert('Failed to upload video.');
     }
   };
 
   return (
-    <form onSubmit={handleUpload} className="upload-panel">
-      <label>Video Title</label>
+    <form onSubmit={handleUpload}>
+      <h2>Upload Video</h2>
       <input
         type="text"
-        value={vidTitle}
-        onChange={(e) => setVidTitle(e.target.value)}
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         required
       />
-
-      <label>Video Description</label>
       <textarea
-        value={vidDesc}
-        onChange={(e) => setVidDesc(e.target.value)}
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
         required
       />
-
-      <label>Tags (comma-separated)</label>
       <input
         type="text"
-        value={vidTags}
-        onChange={(e) => setVidTags(e.target.value)}
+        placeholder="Tags (comma-separated)"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
       />
+      <input type="file" accept="video/*" onChange={handleFileChange} required />
+      
+      {/* Video preview */}
+      {videoPreview && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Video Preview</h3>
+          <video width="400" controls>
+            <source src={videoPreview} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      )}
 
-      <label>Video File</label>
-      <input
-        type="file"
-        onChange={(e) => setVidFile(e.target.files[0])}
-        accept="video/*"
-        required
-      />
-
-      <button type="submit">Submit</button>
-      {uploadError && <p style={{ color: 'red' }}>{uploadError}</p>}
-      {uploadSuccess && <p style={{ color: 'green' }}>{uploadSuccess}</p>}
+      <button type="submit" style={{ marginTop: '20px' }}>Upload</button>
     </form>
   );
-};
+}
 
 export default UploadPanel;
